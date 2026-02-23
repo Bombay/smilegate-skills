@@ -1,5 +1,5 @@
 ---
-name: smilegate-connector
+name: connector
 description: 스마일게이트 업무 도구(Slack, Jira, Confluence, BISKIT)를 Claude Code에 연결하는 설정 가이드. 비개발자도 따라할 수 있도록 단계별로 안내한다. "커넥터", "connector", "MCP 설정", "jira 연결", "confluence 연결", "slack 연결", "biskit 연결", "비스킷 연결" 요청에 사용.
 triggers:
   - "커넥터"
