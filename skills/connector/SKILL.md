@@ -1,6 +1,6 @@
 ---
 name: connector
-description: 스마일게이트 업무 도구(Slack, Jira, Confluence, BISKIT)를 Claude Code에 연결하는 설정 가이드. 비개발자도 따라할 수 있도록 단계별로 안내한다. "커넥터", "connector", "MCP 설정", "jira 연결", "confluence 연결", "slack 연결", "biskit 연결", "비스킷 연결" 요청에 사용.
+description: 스마일게이트 업무 도구(Slack, Jira, Confluence, BISKIT, API Docs)를 Claude Code에 연결하는 설정 가이드. 비개발자도 따라할 수 있도록 단계별로 안내한다. "커넥터", "connector", "MCP 설정", "jira 연결", "confluence 연결", "slack 연결", "biskit 연결", "비스킷 연결", "apidocs 연결", "api docs 연결" 요청에 사용.
 triggers:
   - "커넥터"
   - "connector"
@@ -12,6 +12,9 @@ triggers:
   - "biskit 연결"
   - "비스킷 연결"
   - "biskit mcp"
+  - "apidocs 연결"
+  - "api docs 연결"
+  - "apidocs mcp"
   - "스마일게이트 커넥터"
 ---
 
@@ -28,6 +31,7 @@ triggers:
 | Jira | MCP (토큰 발급 필요) | 보통 |
 | Confluence | MCP (토큰 발급 필요) | 보통 |
 | BISKIT | MCP (토큰 발급 필요) | 보통 |
+| API Docs | MCP (인증 불필요, 클릭만) | 쉬움 |
 
 ## 실행 흐름
 
@@ -44,6 +48,7 @@ triggers:
 2. ToolSearch로 `+jira test` 검색 → Jira MCP 존재 여부 확인. 도구가 있으면 `mcp__jira__test_jira_connection()` 호출로 실제 연결 확인
 3. ToolSearch로 `+confluence test` 검색 → Confluence MCP 존재 여부 확인. 도구가 있으면 `mcp__confluence__test_confluence_connection()` 호출로 실제 연결 확인
 4. ToolSearch로 `+biskit check_auth` 검색 → BISKIT MCP 존재 여부 확인. 도구가 있으면 `mcp__biskit-report-mcp__check_auth_status()` 호출로 실제 연결 확인
+5. ToolSearch로 `+apidocs search` 검색 → API Docs MCP 존재 여부 확인. 도구가 있으면 연결됨 (인증 불필요이므로 도구 존재 = 연결 성공)
 
 진단 결과를 테이블로 보여준다:
 
@@ -53,10 +58,12 @@ triggers:
 | Jira | ✅ 연결됨 / ⚠️ 재연결 필요 (토큰 만료 등) / ❌ 미연결 |
 | Confluence | ✅ 연결됨 / ⚠️ 재연결 필요 / ❌ 미연결 |
 | BISKIT | ✅ 연결됨 / ⚠️ 재연결 필요 / ❌ 미연결 |
+| API Docs | ✅ 연결됨 / ❌ 미연결 |
 
 - ✅ 연결됨: 도구 존재 + 연결 테스트 성공
 - ⚠️ 재연결 필요: 도구는 존재하지만 연결 테스트 실패 (토큰 만료, 토큰 오류 등)
 - ❌ 미연결: 도구 자체가 없음 (MCP 설정 없음)
+- API Docs는 인증이 불필요하므로 ✅(연결됨)과 ❌(미연결) 두 가지 상태만 존재한다.
 
 이미 연결된 서비스(✅)는 건너뛴다. ⚠️ 또는 ❌ 상태의 서비스만 설정을 진행한다.
 모두 ✅이면 "모든 서비스가 연결되어 있습니다!"를 출력하고 기본 사용법을 안내한 뒤 종료한다.
@@ -71,15 +78,20 @@ triggers:
   - {label: "Confluence ⚠️ 재연결", description: "토큰 만료 또는 오류 — 토큰을 다시 발급받아 연결합니다"}
   - {label: "BISKIT", description: "게임 데이터 리포트 조회 (토큰 발급 필요)"}
   - {label: "BISKIT ⚠️ 재연결", description: "토큰 만료 또는 오류 — 토큰을 다시 발급받아 연결합니다"}
+  - {label: "API Docs", description: "SGP API 명세 검색 (인증 불필요, 바로 설치)"}
 - multiSelect: true
 - 해당 상태의 서비스만 옵션에 표시한다 (예: Jira가 ❌이면 "Jira"만, ⚠️이면 "Jira ⚠️ 재연결"만)
 
 #### 분기 흐름
 
 선택 결과에 따라 아래와 같이 진행한다:
-- **Slack만 선택** → Phase 1 → Phase 4 (Phase 2 건너뜀)
-- **MCP 서비스만 선택** (Jira/Confluence/BISKIT) → Phase 2 → Phase 4 (Phase 1 건너뜀)
-- **Slack + MCP 서비스 선택** → Phase 1 → Phase 2 → Phase 4
+- **Slack만 선택** → Phase 1 → Phase 5
+- **API Docs만 선택** → Phase 2 → Phase 5
+- **MCP 서비스만 선택** (Jira/Confluence/BISKIT) → Phase 3 → Phase 5
+- **API Docs + MCP 서비스 선택** → Phase 2 → Phase 3 → Phase 5
+- **Slack + API Docs 선택** → Phase 1 → Phase 2 → Phase 5
+- **Slack + MCP 서비스 선택** → Phase 1 → Phase 3 → Phase 5
+- **Slack + API Docs + MCP 서비스 선택** → Phase 1 → Phase 2 → Phase 3 → Phase 5
 
 ### Phase 1: Slack 연결 (Connectors)
 
@@ -119,14 +131,48 @@ AskUserQuestion으로 완료 여부를 확인한다:
 - "아니요, 도움이 필요해요" 선택 시: 어디서 막혔는지 물어보고 함께 해결한 뒤 다시 완료 여부를 확인한다.
 
 완료 확인 후:
-- MCP 서비스(Jira/Confluence/BISKIT)를 선택했으면 Phase 2로 이동한다.
-- MCP 서비스를 선택하지 않았으면 Phase 2를 건너뛰고 Phase 4로 이동한다.
+- API Docs를 선택했으면 Phase 2로 이동한다.
+- MCP 서비스(Jira/Confluence/BISKIT)를 선택했으면 Phase 3으로 이동한다.
+- API Docs도 MCP 서비스도 선택하지 않았으면 Phase 5로 이동한다.
 
-### Phase 2: MCP 연결 (Jira / Confluence / BISKIT)
+### Phase 2: API Docs 연결 (인증 불필요)
+
+API Docs는 인증이 필요 없어 가장 간단하게 설치할 수 있다.
+
+아래 Bash 명령을 실행하여 API Docs MCP를 설치한다:
+
+```bash
+claude mcp add --transport http -s user apidocs http://mcp.sginfra.net/api-docs-mcp
+```
+
+설치 완료 후 사용자에게 안내:
+
+API Docs MCP가 설치되었습니다!
+
+⚠️ 다른 MCP 서비스(Jira/Confluence/BISKIT)도 함께 설정하는 경우:
+- API Docs 설치만으로는 재시작하지 않고, 나머지 서비스 설정이 모두 끝난 후 **한 번만 재시작**합니다.
+- 이 안내 후 Phase 3으로 이동하여 나머지 MCP 서비스를 설정한다.
+
+다른 MCP 서비스 설정이 없는 경우 (API Docs만 설치):
+- **Claude Code를 재시작**해야 API Docs 도구를 사용할 수 있습니다.
+- 재시작 방법: `Ctrl+D` → 터미널에서 `claude` 실행
+- 재시작 후 `/resume` 입력으로 대화를 이어갈 수 있습니다.
+
+API Docs만 설치한 경우 재시작 후 연결 테스트:
+- ToolSearch로 `+apidocs search` 검색
+- `mcp__apidocs__search_api_spec(query="결제 API")` 호출로 실제 테스트
+- 성공하면: 검색 결과 표시 + Phase 5로 이동
+- 실패하면: 트러블슈팅 안내
+  1. Claude Code를 재시작했는지 확인
+  2. `claude mcp add` 명령이 정상 실행되었는지 확인 (에러 메시지가 없었는지)
+  3. `~/.claude.json`(Mac/Linux) 또는 `%USERPROFILE%\.claude.json`(Windows)에 `apidocs` 설정이 반영되었는지 확인
+  4. 네트워크에서 mcp.sginfra.net 접근이 가능한지 확인 (사내망 또는 VPN 필요)
+
+### Phase 3: MCP 연결 (Jira / Confluence / BISKIT)
 
 > ⚠️ Jira, Confluence, BISKIT MCP는 **사내망 또는 VPN 연결이 필요**합니다. 연결 상태를 먼저 확인해주세요.
 
-**핵심 원칙**: 선택한 MCP 서비스를 모두 한 번에 설정하고, **재시작은 딱 한 번**만 한다.
+**핵심 원칙**: 선택한 MCP 서비스(Jira/Confluence/BISKIT)를 모두 한 번에 설정하고, **재시작은 딱 한 번**만 한다. (API Docs는 Phase 2에서 이미 처리되었으므로 여기서는 다루지 않는다.)
 토큰 발급 → 전체 입력 → 설정 파일 일괄 저장 → 재시작 → 연결 테스트 순서로 진행한다.
 
 #### Step 1: 선택한 서비스의 토큰 발급 안내 (모두 출력)
@@ -296,6 +342,11 @@ BISKIT 테스트 (BISKIT 선택 시):
 - 성공하면: "인증이 정상적으로 되어있습니다" + 프로필 정보 표시
 - 실패하면: 트러블슈팅 안내
 
+API Docs 테스트 (Phase 2에서 API Docs를 설치한 경우):
+- ToolSearch로 `+apidocs search` 검색 후 `mcp__apidocs__search_api_spec(query="결제 API")` 호출
+- 성공하면: 검색 결과 표시
+- 실패하면: 트러블슈팅 안내 (네트워크 확인, 재시작 여부, `claude mcp add` 명령 재실행)
+
 트러블슈팅:
 ```
 연결 실패 시 확인할 것:
@@ -307,7 +358,7 @@ BISKIT 테스트 (BISKIT 선택 시):
 6. Windows의 경우 %USERPROFILE%\.claude.json 경로가 맞는지 확인
 ```
 
-### Phase 3: 미해결 이슈 등록
+### Phase 4: 미해결 이슈 등록
 
 스킬 진행 중 트러블슈팅이 **진전 없이 막혀있다고 판단**되면, GitHub 이슈 등록을 제안한다.
 
@@ -397,9 +448,9 @@ EOF
 이슈 생성 후 URL을 사용자에게 보여준다:
 "이슈가 등록되었습니다: {이슈 URL}"
 
-이후 Phase 4로 진행한다. (이슈 등록 여부와 관계없이 완료 리포트는 출력)
+이후 Phase 5로 진행한다. (이슈 등록 여부와 관계없이 완료 리포트는 출력)
 
-### Phase 4: 완료 리포트
+### Phase 5: 완료 리포트
 
 모든 설정이 끝나면 최종 상태를 요약한다.
 
@@ -419,6 +470,7 @@ EOF
 - **Jira**: "나한테 할당된 Jira 이슈 보여줘", "PROJ-123 이슈 상태 알려줘"
 - **Confluence**: "최근 업데이트된 Wiki 페이지 보여줘", "'프로젝트 계획' 관련 문서 검색해줘"
 - **BISKIT**: "카제나 어제 DAU 알려줘", "에픽세븐 이번 주 매출은?"
+- **API Docs**: "결제 관련 API 명세 찾아줘", "사용자 인증 API 스펙 알려줘"
 
 연결 실패한 서비스가 있으면 트러블슈팅 안내를 함께 표시한다.
 
@@ -431,12 +483,14 @@ EOF
 | Jira MCP 서버 | `http://mcp.sginfra.net/confluence-jira-mcp` |
 | Confluence MCP 서버 | `http://mcp.sginfra.net/confluence-wiki-mcp` |
 | BISKIT MCP 서버 | `https://mcp.sginfra.net/biskit-report-mcp` |
+| API Docs MCP 서버 | `http://mcp.sginfra.net/api-docs-mcp` |
 | Jira 토큰 발급 | https://jira.smilegate.net/secure/ViewProfile.jspa?selectedTab=com.atlassian.pats.pats-plugin:jira-user-personal-access-tokens |
 | Confluence 토큰 발급 | https://wiki.smilegate.net/plugins/personalaccesstokens/usertokens.action |
 | BISKIT 토큰 발급 | https://biskit-sync.smilegate.net?openTokenDialog |
 | Slack Connectors | https://claude.ai/settings/connectors |
 | 공식 설치 가이드 | https://wiki.smilegate.net/pages/viewpage.action?pageId=589459355 |
 | BISKIT MCP 가이드 | https://wiki.smilegate.net/pages/viewpage.action?pageId=642342187 |
+| API Docs MCP 가이드 | https://wiki.smilegate.net/pages/viewpage.action?pageId=606711534 |
 
 ## MCP 설정 위치
 
