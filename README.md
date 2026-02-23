@@ -6,16 +6,20 @@
 
 ## 설치
 
+`-g` 플래그로 전역 설치하면 모든 프로젝트에서 스킬을 사용할 수 있습니다.
+
 ```bash
-# Claude Code
-npx skills add hyuntkim/smilegate-skills --agent claude-code --yes
+# Claude Code (전역)
+npx skills add Bombay/smilegate-skills --agent claude-code -g --yes
 
-# Cursor
-npx skills add hyuntkim/smilegate-skills --agent cursor --yes
+# Cursor (전역)
+npx skills add Bombay/smilegate-skills --agent cursor -g --yes
 
-# Windsurf
-npx skills add hyuntkim/smilegate-skills --agent windsurf --yes
+# Windsurf (전역)
+npx skills add Bombay/smilegate-skills --agent windsurf -g --yes
 ```
+
+> 프로젝트 단위로 설치하려면 `-g` 플래그를 제거하세요.
 
 ## 포함된 스킬
 
