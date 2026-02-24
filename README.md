@@ -11,10 +11,14 @@
 ```bash
 # Claude Code (전역)
 npx skills add Bombay/smilegate-skills --agent claude-code -g --yes
+```
 
+```bash
 # Cursor (전역)
 npx skills add Bombay/smilegate-skills --agent cursor -g --yes
+```
 
+```bash
 # Windsurf (전역)
 npx skills add Bombay/smilegate-skills --agent windsurf -g --yes
 ```
