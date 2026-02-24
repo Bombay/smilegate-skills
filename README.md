@@ -2,25 +2,14 @@
 
 스마일게이트 업무 도구를 AI 코딩 에이전트에 연결하는 스킬 모음.
 
-[Agent Skills](https://agentskills.io) 표준을 따르며, Claude Code / Codex CLI / Gemini CLI / Cursor / Windsurf 등에서 사용할 수 있습니다.
+[Agent Skills](https://agentskills.io) 표준을 따르며, Claude Code에서 사용할 수 있습니다.
 
 ## 설치
 
 `-g` 플래그로 전역 설치하면 모든 프로젝트에서 스킬을 사용할 수 있습니다.
 
 ```bash
-# Claude Code (전역)
 npx skills add Bombay/smilegate-skills --agent claude-code -g --yes
-```
-
-```bash
-# Cursor (전역)
-npx skills add Bombay/smilegate-skills --agent cursor -g --yes
-```
-
-```bash
-# Windsurf (전역)
-npx skills add Bombay/smilegate-skills --agent windsurf -g --yes
 ```
 
 > 프로젝트 단위로 설치하려면 `-g` 플래그를 제거하세요.
