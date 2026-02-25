@@ -28,7 +28,7 @@ AskUserQuestion으로 제안한다:
 
 "네, 이슈 등록해주세요" 선택 시, `gh issue create` 명령으로 이슈를 생성한다.
 
-이슈 저장소: `Bombay/smilegate-skills`
+이슈 저장소: `Bombay/smilegate-ai-tools`
 
 이슈 제목 형식:
 ```
@@ -76,7 +76,7 @@ AskUserQuestion으로 제안한다:
 
 이슈 생성 명령:
 ```bash
-gh issue create --repo Bombay/smilegate-skills \
+gh issue create --repo Bombay/smilegate-ai-tools \
   --title "{제목}" \
   --body "$(cat <<'EOF'
 {본문}

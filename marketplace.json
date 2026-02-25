@@ -6,10 +6,10 @@
   },
   "plugins": [
     {
-      "name": "smilegate-skills",
+      "name": "smilegate-ai-tools",
       "source": {
         "source": "github",
-        "repo": "Bombay/smilegate-skills"
+        "repo": "Bombay/smilegate-ai-tools"
       },
       "version": "1.0.0",
       "description": "스마일게이트 업무 도구 연결 및 자동화 스킬 모음",

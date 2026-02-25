@@ -1,4 +1,4 @@
-# smilegate-skills
+# smilegate-ai-tools
 
 스마일게이트 업무 도구를 Claude Code에 연결하는 플러그인.
 
@@ -7,13 +7,13 @@
 ### 1. 마켓플레이스 등록 (최초 1회)
 
 ```bash
-claude plugin marketplace add Bombay/smilegate-skills
+claude plugin marketplace add Bombay/smilegate-ai-tools
 ```
 
 ### 2. 플러그인 설치
 
 ```bash
-claude plugin install smilegate-skills@smilegate-marketplace
+claude plugin install smilegate-ai-tools@smilegate-marketplace
 ```
 
 > Claude Code를 재시작하면 플러그인이 활성화됩니다.
@@ -21,7 +21,7 @@ claude plugin install smilegate-skills@smilegate-marketplace
 ### 레거시 설치 (npx)
 
 ```bash
-npx skills add Bombay/smilegate-skills --agent claude-code -g --yes
+npx skills add Bombay/smilegate-ai-tools --agent claude-code -g --yes
 ```
 
 ## 포함된 스킬
