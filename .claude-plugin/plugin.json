@@ -1,0 +1,9 @@
+{
+  "name": "smilegate-skills",
+  "description": "스마일게이트 업무 도구 연결 및 자동화 스킬 모음. Slack, Jira, Confluence, BISKIT, API Docs, GitLab 연결과 업무 자동화를 지원합니다.",
+  "version": "1.0.0",
+  "author": {
+    "name": "데이터서비스개발팀"
+  },
+  "repository": "https://github.com/Bombay/smilegate-skills"
+}

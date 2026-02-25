@@ -1,24 +1,35 @@
 # smilegate-skills
 
-스마일게이트 업무 도구를 AI 코딩 에이전트에 연결하는 스킬 모음.
-
-[Agent Skills](https://agentskills.io) 표준을 따르며, Claude Code에서 사용할 수 있습니다.
+스마일게이트 업무 도구를 Claude Code에 연결하는 플러그인.
 
 ## 설치
 
-`-g` 플래그로 전역 설치하면 모든 프로젝트에서 스킬을 사용할 수 있습니다.
+### 1. 마켓플레이스 등록 (최초 1회)
+
+```bash
+claude plugin marketplace add https://github.com/Bombay/smilegate-skills
+```
+
+### 2. 플러그인 설치
+
+```bash
+claude plugin install smilegate-skills
+```
+
+> Claude Code를 재시작하면 플러그인이 활성화됩니다.
+
+### 레거시 설치 (npx)
 
 ```bash
 npx skills add Bombay/smilegate-skills --agent claude-code -g --yes
 ```
 
-> 프로젝트 단위로 설치하려면 `-g` 플래그를 제거하세요.
-
 ## 포함된 스킬
 
 | 스킬 | 설명 | 트리거 |
 |------|------|--------|
-| connector | Slack, Jira, Confluence, BISKIT 연결 설정 | "커넥터 설정해줘", "jira 연결해줘" |
+| connector | Slack, Jira, Confluence, BISKIT, API Docs, GitLab 연결 설정 | "커넥터 설정해줘", "jira 연결해줘" |
+| automation | 반복 업무를 대화로 자동화 스킬 생성 | "자동화 만들기", "업무 자동화" |
 
 ## 참고
 

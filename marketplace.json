@@ -1,0 +1,21 @@
+{
+  "name": "smilegate-marketplace",
+  "description": "스마일게이트 Claude Code 플러그인 마켓플레이스",
+  "owner": {
+    "name": "데이터서비스개발팀"
+  },
+  "plugins": [
+    {
+      "name": "smilegate-skills",
+      "source": {
+        "source": "github",
+        "repo": "Bombay/smilegate-skills"
+      },
+      "version": "1.0.0",
+      "description": "스마일게이트 업무 도구 연결 및 자동화 스킬 모음",
+      "author": {
+        "name": "데이터서비스개발팀"
+      }
+    }
+  ]
+}
