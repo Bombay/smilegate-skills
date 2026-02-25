@@ -79,7 +79,11 @@ triggers:
 
 ### 서비스 선택
 
-설정이 필요한 서비스(⚠️/❌)가 있으면 AskUserQuestion으로 설정할 서비스를 선택받는다:
+설정이 필요한 서비스(⚠️/❌)가 있으면 먼저 추천 안내를 출력한다:
+
+> 💡 **추천**: 처음이시라면 **Slack, Jira, Confluence, BISKIT** 4가지를 먼저 설정하는 것을 권장합니다. 가장 많이 사용되는 핵심 서비스입니다.
+
+이후 AskUserQuestion으로 설정할 서비스를 선택받는다:
 - question: "어떤 서비스를 설정할까요? (여러 개 선택 가능)"
 - options: ⚠️/❌ 상태의 서비스만 동적으로 표시
   - {label: "Slack", description: "Slack 채널 읽기/검색 (클릭 몇 번이면 끝)"}
