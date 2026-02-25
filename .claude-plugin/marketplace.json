@@ -8,7 +8,10 @@
   "plugins": [
     {
       "name": "smilegate-ai-tools",
-      "source": "./",
+      "source": {
+        "source": "github",
+        "repo": "Bombay/smilegate-ai-tools"
+      },
       "version": "1.0.1",
       "description": "스마일게이트 업무 도구 연결 및 자동화 스킬 모음",
       "author": {
