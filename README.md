@@ -18,12 +18,6 @@ claude plugin install smilegate-ai-tools@smilegate-marketplace
 
 > Claude Code를 재시작하면 플러그인이 활성화됩니다.
 
-### 레거시 설치 (npx)
-
-```bash
-npx skills add Bombay/smilegate-ai-tools --agent claude-code -g --yes
-```
-
 ## 포함된 스킬
 
 | 스킬 | 설명 | 트리거 |
