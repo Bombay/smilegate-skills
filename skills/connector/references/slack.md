@@ -13,17 +13,29 @@ Slack은 가장 쉽다. 브라우저에서 클릭 몇 번이면 끝.
 
 **Step 3.** 목록에서 **"Slack"**을 찾아 클릭하세요
 
-**Step 4.** **"허용"** 버튼을 클릭하세요
+**Step 4.** **"연결"** 버튼을 클릭하세요
 
-**Step 5.** Slack 페이지로 이동됩니다
-- 워크스페이스 선택 화면이 나오면 **"Smilegate Internal"**을 선택하세요
+**Step 5.** Slack 페이지로 이동됩니다. 이후 과정은 Slack 로그인 상태에 따라 다릅니다:
+
+### Slack에 이미 로그인되어 있는 경우
+
+**Step 6.** 워크스페이스 선택 화면이 나오면 **"Smilegate Internal"**을 선택하세요
 - 다른 워크스페이스가 보이더라도 반드시 **Smilegate Internal**을 선택해야 사내 채널에 접근할 수 있습니다
 
-**Step 6.** Slack 로그인 화면이 나오면 로그인하세요 (이미 로그인되어 있으면 자동으로 넘어갑니다)
+**Step 7.** Slack에서 **"연결"**을 클릭하여 Claude의 접근을 승인하세요
 
-**Step 7.** Slack에서 **"허용"**을 클릭하여 Claude의 접근을 승인하세요
+### Slack에 로그인되어 있지 않은 경우
 
-**Step 8.** 완료! "연결됨"으로 표시되면 성공입니다
+**Step 6.** Slack 로그인 화면이 나오면 먼저 로그인하세요
+
+**Step 7.** 로그인 후 워크스페이스 선택 화면에서 **"Smilegate Internal"**을 선택하세요
+- 다른 워크스페이스가 보이더라도 반드시 **Smilegate Internal**을 선택해야 사내 채널에 접근할 수 있습니다
+
+**Step 8.** Slack에서 **"연결"**을 클릭하여 Claude의 접근을 승인하세요
+
+---
+
+**Step 9.** 연결 완료 확인: 다시 [Slack Connectors 설정 페이지](https://claude.ai/settings/connectors) 링크를 클릭하여 Slack이 **"연결됨"**으로 표시되는지 확인하세요
 
 ## 주의 사항
 
