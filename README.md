@@ -7,13 +7,13 @@
 ### 1. 마켓플레이스 등록 (최초 1회)
 
 ```bash
-claude plugin marketplace add https://github.com/Bombay/smilegate-skills
+claude plugin marketplace add Bombay/smilegate-skills
 ```
 
 ### 2. 플러그인 설치
 
 ```bash
-claude plugin install smilegate-skills
+claude plugin install smilegate-skills@smilegate-marketplace
 ```
 
 > Claude Code를 재시작하면 플러그인이 활성화됩니다.
