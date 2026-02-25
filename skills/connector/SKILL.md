@@ -1,20 +1,17 @@
 ---
 name: connector
-description: 스마일게이트 업무 도구(Slack, Jira, Confluence, BISKIT, API Docs, GitLab)를 Claude Code에 연결하는 설정 가이드. 비개발자도 따라할 수 있도록 단계별로 안내한다. "커넥터", "connector", "MCP 설정", "jira 연결", "confluence 연결", "slack 연결", "biskit 연결", "비스킷 연결", "apidocs 연결", "api docs 연결", "gitlab 연결", "깃랩 연결" 요청에 사용.
+description: 스마일게이트 업무 도구(Slack, Jira, Confluence, BISKIT, API Docs, GitLab)를 Claude Code에 연결하는 설정 가이드. 비개발자도 따라할 수 있도록 단계별로 안내한다. "커넥터", "connector", "커넥터 설정", "jira 연결", "confluence 연결", "slack 연결", "biskit 연결", "비스킷 연결", "apidocs 연결", "api docs 연결", "gitlab 연결", "깃랩 연결" 요청에 사용.
 triggers:
   - "커넥터"
   - "connector"
   - "커넥터 설정"
-  - "MCP 설정"
   - "jira 연결"
   - "confluence 연결"
   - "slack 연결"
   - "biskit 연결"
   - "비스킷 연결"
-  - "biskit mcp"
   - "apidocs 연결"
   - "api docs 연결"
-  - "apidocs mcp"
   - "gitlab 연결"
   - "깃랩 연결"
   - "스마일게이트 커넥터"
@@ -186,6 +183,54 @@ MCP 서비스를 1개 이상 설정한 경우, **모든 서비스의 설정이 �
 연결 실패한 서비스가 있으면 트러블슈팅 안내를 함께 표시한다.
 
 > 팁: 토큰이 만료되면 "커넥터 설정해줘" 한 마디로 이 스킬을 다시 실행할 수 있습니다.
+
+### 자동화 스킬 제안 (첫 실행 시만)
+
+완료 리포트를 출력한 후, 사용자의 첫 실행 여부를 확인한다.
+
+**확인 방법:**
+Read 도구로 `~/.claude/skills/state.json` 파일을 읽는다.
+- 파일이 없거나, `connector.completed`가 `false`이면 → 첫 실행
+- `connector.completed`가 `true`이면 → 재실행
+
+**케이스 1: 첫 실행 + 연결 성공 서비스 1개 이상**
+
+1. `~/.claude/skills/state.json` 파일을 생성/업데이트한다:
+   ```json
+   {
+     "connector": {
+       "completed": true,
+       "first_completed_at": "{현재 날짜}",
+       "connected_services": ["{연결된 서비스 목록}"]
+     }
+   }
+   ```
+   > 파일이 이미 존재하면 기존 내용을 보존하고 `connector` 키만 추가/업데이트한다.
+
+2. 자동화 스킬을 제안한다:
+
+   ```
+   💡 연결된 도구로 바로 업무 자동화를 만들어볼까요?
+
+   반복되는 업무(주간보고, 회의록, 발표자료 등)를
+   대화만으로 자동화 스킬로 만들 수 있어요.
+
+   ① 좋아요, 만들어볼래요 → automation 스킬의 Phase 1부터 시작
+   ② 나중에 할게요 → 종료 (나중에 "자동화 만들기"로 실행 가능)
+   ```
+
+   AskUserQuestion으로 선택을 받는다.
+   - ① 선택 시: automation 스킬의 Phase 1부터 실행 (Phase 0 건너뜀, 연결 상태를 이미 알고 있으므로)
+   - ② 선택 시: "나중에 만들고 싶으면 '자동화 만들기'라고 말하면 돼요!" 안내 후 종료
+
+**케이스 2: 첫 실행 + 연결 성공 서비스 0개**
+
+플래그를 생성하지 않는다. 다음 성공적 실행 시 automation 제안을 받을 수 있도록 한다.
+완료 리포트만 출력하고 종료.
+
+**케이스 3: 재실행 (completed가 true)**
+
+자동화 제안을 건너뛴다. 완료 리포트만 출력하고 종료한다.
 
 ## MCP 설정 위치
 
