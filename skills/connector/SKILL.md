@@ -189,13 +189,13 @@ MCP 서비스를 1개 이상 설정한 경우, **모든 서비스의 설정이 �
 완료 리포트를 출력한 후, 사용자의 첫 실행 여부를 확인한다.
 
 **확인 방법:**
-Read 도구로 `~/.claude/skills/state.json` 파일을 읽는다.
+Read 도구로 `~/.claude/skills/smilegate-ai-tools/state.json` 파일을 읽는다.
 - 파일이 없거나, `connector.completed`가 `false`이면 → 첫 실행
 - `connector.completed`가 `true`이면 → 재실행
 
 **케이스 1: 첫 실행 + 연결 성공 서비스 1개 이상**
 
-1. `~/.claude/skills/state.json` 파일을 생성/업데이트한다:
+1. `~/.claude/skills/smilegate-ai-tools/state.json` 파일을 생성/업데이트한다:
    ```json
    {
      "connector": {

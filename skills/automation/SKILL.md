@@ -347,7 +347,7 @@ AskUserQuestion으로 확인.
 
 이 스킬은 connector 스킬의 첫 실행 완료 시 자동으로 제안된다.
 
-- connector는 `~/.claude/skills/state.json`의 `connector.completed` 값으로 첫 실행을 감지한다.
+- connector는 `~/.claude/skills/smilegate-ai-tools/state.json`의 `connector.completed` 값으로 첫 실행을 감지한다.
 - 첫 실행이고 연결 성공 서비스가 1개 이상이면, 자동화 스킬을 제안한다.
 - 사용자가 수락하면 Phase 0을 건너뛰고 Phase 1부터 시작한다.
   (connector가 이미 연결 상태를 확인했으므로)
