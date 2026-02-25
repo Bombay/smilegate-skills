@@ -9,7 +9,7 @@
     {
       "name": "smilegate-ai-tools",
       "source": "./",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "스마일게이트 업무 도구 연결 및 자동화 스킬 모음",
       "author": {
         "name": "데이터서비스개발팀"
