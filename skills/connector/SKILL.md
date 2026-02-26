@@ -1,6 +1,6 @@
 ---
 name: connector
-description: 스마일게이트 업무 도구(Slack, Jira, Confluence, BISKIT, API Docs, GitLab)를 Claude Code에 연결하는 설정 가이드. 비개발자도 따라할 수 있도록 단계별로 안내한다. "커넥터", "connector", "커넥터 설정", "jira 연결", "confluence 연결", "slack 연결", "biskit 연결", "비스킷 연결", "apidocs 연결", "api docs 연결", "gitlab 연결", "깃랩 연결" 요청에 사용.
+description: 스마일게이트 업무 도구(Slack, Jira, Confluence, BISKIT, API Docs, GitLab, Amplitude)를 Claude Code에 연결하는 설정 가이드. 비개발자도 따라할 수 있도록 단계별로 안내한다. "커넥터", "connector", "커넥터 설정", "jira 연결", "confluence 연결", "slack 연결", "biskit 연결", "비스킷 연결", "apidocs 연결", "api docs 연결", "gitlab 연결", "깃랩 연결", "amplitude 연결", "앰플리튜드 연결" 요청에 사용.
 triggers:
   - "커넥터"
   - "connector"
@@ -14,6 +14,8 @@ triggers:
   - "api docs 연결"
   - "gitlab 연결"
   - "깃랩 연결"
+  - "amplitude 연결"
+  - "앰플리튜드 연결"
   - "스마일게이트 커넥터"
 ---
 
@@ -32,6 +34,7 @@ triggers:
 | BISKIT | MCP (토큰 발급 필요) | 보통 |
 | API Docs | MCP (인증 불필요, 클릭만) | 쉬움 |
 | GitLab | CLI 설치 (토큰 발급 필요) | 보통 |
+| Amplitude | MCP (OAuth 인증, 클릭만) | 쉬움 |
 
 ## 실행 흐름
 
@@ -54,6 +57,7 @@ triggers:
 4. ToolSearch로 `+biskit check_auth` 검색 → BISKIT MCP 존재 여부 확인. 도구가 있으면 `mcp__biskit-report-mcp__check_auth_status()` 호출로 실제 연결 확인
 5. ToolSearch로 `+apidocs search` 검색 → API Docs MCP 존재 여부 확인. 도구가 있으면 연결됨 (인증 불필요이므로 도구 존재 = 연결 성공)
 6. Bash로 `glab auth status --hostname git.sginfra.net 2>&1` 실행 → GitLab CLI 인증 상태 확인. 명령이 없으면 glab 미설치
+7. ToolSearch로 `+amplitude` 검색 → Amplitude MCP 존재 여부 확인. 도구가 있으면 설정 완료 (OAuth는 사용 시 자동 처리이므로 도구 존재 = 추가 작업 불필요)
 
 진단 결과를 테이블로 보여준다:
 
@@ -65,11 +69,12 @@ triggers:
 | BISKIT | ✅ 연결됨 / ⚠️ 재연결 필요 / ❌ 미연결 |
 | API Docs | ✅ 연결됨 / ❌ 미연결 |
 | GitLab | ✅ 연결됨 / ⚠️ 재연결 필요 / ❌ 미연결 |
+| Amplitude | ✅ 연결됨 / ❌ 미연결 |
 
 - ✅ 연결됨: 도구 존재 + 연결 테스트 성공 (GitLab은 glab 설치 + 인증 완료)
 - ⚠️ 재연결 필요: 도구는 존재하지만 연결 테스트 실패 (토큰 만료 등). GitLab은 glab 설치됨 + 인증 실패
 - ❌ 미연결: 도구 자체가 없음 (MCP 설정 없음). GitLab은 glab 미설치
-- Slack과 API Docs는 인증이 불필요하므로 ✅(연결됨)과 ❌(미연결) 두 가지 상태만 존재한다.
+- Slack, API Docs, Amplitude는 수동 토큰 관리가 불필요하므로 ✅(연결됨)과 ❌(미연결) 두 가지 상태만 존재한다.
 
 이미 연결된 서비스(✅)는 건너뛴다. ⚠️ 또는 ❌ 상태의 서비스만 설정을 진행한다.
 모두 ✅이면 "모든 서비스가 연결되어 있습니다!"를 출력하고 기본 사용법을 안내한 뒤 종료한다.
@@ -93,6 +98,7 @@ triggers:
   - {label: "API Docs", description: "SGP API 명세 검색 (인증 불필요, 바로 설치)"}
   - {label: "GitLab", description: "사내 GitLab CLI 설치 및 연결 (토큰 발급 필요)"}
   - {label: "GitLab ⚠️ 재연결", description: "토큰 만료 또는 오류 — 토큰을 다시 발급받아 연결합니다"}
+  - {label: "Amplitude", description: "프로덕트 분석 (이벤트, 차트, 퍼널, 실험) — OAuth 인증, 바로 설치"}
 - multiSelect: true
 - 해당 상태의 서비스만 옵션에 표시한다 (예: Jira가 ❌이면 "Jira"만, ⚠️이면 "Jira ⚠️ 재연결"만)
 
@@ -108,6 +114,7 @@ triggers:
 | 4 | BISKIT | [references/biskit.md](references/biskit.md) | O (MCP) |
 | 5 | API Docs | [references/apidocs.md](references/apidocs.md) | O (MCP) |
 | 6 | GitLab | [references/gitlab.md](references/gitlab.md) | X |
+| 7 | Amplitude | [references/amplitude.md](references/amplitude.md) | O (MCP) |
 
 각 서비스는 해당 가이드의 절차에 따라 **설정까지만** 진행한다. 연결 테스트는 모든 설정이 끝난 뒤 일괄 수행한다.
 
@@ -125,8 +132,8 @@ Jira와 Confluence를 모두 선택한 경우, 사용자 ID는 **한 번만** �
 
 #### MCP 설정 파일 일괄 업데이트
 
-MCP 서비스(Jira/Confluence/BISKIT/API Docs)를 1개 이상 선택한 경우:
-- 모든 MCP 서비스의 토큰 입력이 끝난 후, Read 도구로 설정 파일을 읽고 `mcpServers` 객체에 **선택한 서비스를 한번에** 추가(신규) 또는 덮어쓰기(재연결)한다.
+토큰 기반 MCP 서비스(Jira/Confluence/BISKIT)를 1개 이상 선택한 경우:
+- 모든 토큰 입력이 끝난 후, Read 도구로 설정 파일을 읽고 **기존 mcpServers의 다른 서비스 설정을 보존한 채** 선택한 서비스를 한번에 추가(신규) 또는 해당 키만 덮어쓰기(재연결)한다. `claude mcp add`로 이미 추가된 서비스(API Docs, Amplitude 등)의 설정을 삭제하지 않는다.
 - 각 서비스의 MCP 설정 JSON은 해당 가이드를 참조한다.
 
 **중요**: 토큰은 민감정보이므로 대화 내용에 그대로 노출하지 않는다.
@@ -179,10 +186,11 @@ MCP 서비스를 1개 이상 설정한 경우, **모든 서비스의 설정이 �
 - **BISKIT**: "카제나 어제 DAU 알려줘", "에픽세븐 이번 주 매출은?"
 - **API Docs**: "결제 관련 API 명세 찾아줘", "사용자 인증 API 스펙 알려줘"
 - **GitLab**: "내 MR 목록 보여줘", "feature 브랜치에서 MR 만들어줘"
+- **Amplitude**: "이번 주 DAU 차트 보여줘", "회원가입 퍼널 분석해줘"
 
 연결 실패한 서비스가 있으면 트러블슈팅 안내를 함께 표시한다.
 
-> 팁: 토큰이 만료되면 "커넥터 설정해줘" 한 마디로 이 스킬을 다시 실행할 수 있습니다.
+> 팁: 토큰이 만료되거나 연결에 문제가 생기면 "커넥터 설정해줘" 한 마디로 이 스킬을 다시 실행할 수 있습니다.
 
 > ⚠️ 완료 리포트를 출력한 후 여기서 멈추지 않는다. 반드시 아래 "자동화 스킬 제안" 섹션을 이어서 실행한다.
 
