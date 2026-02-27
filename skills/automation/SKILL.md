@@ -347,7 +347,10 @@ AskUserQuestion으로 확인.
 
 이 스킬은 connector 스킬의 첫 실행 완료 시 자동으로 제안된다.
 
-- connector는 `~/.claude/skills/smilegate-ai-tools/state.json`의 `connector.completed` 값으로 첫 실행을 감지한다.
+- connector는 `~/.claude/skills/smilegate-ai-tools/state.json`의 `connector.first_completed_at` 값으로 첫 실행을 감지한다.
+  - `first_completed_at`이 있으면 재실행 (이전에 이미 completed를 거침).
+  - `first_completed_at`이 없으면 첫 실행 (한 번도 completed된 적 없음).
+  - 레거시 형식(`status` 없이 `completed: true`만 있는 경우)에서는 `first_completed_at`이 없을 수 있으므로, `completed: true`이면서 `first_completed_at`이 없는 경우도 재실행으로 취급한다.
 - 첫 실행이고 연결 성공 서비스가 1개 이상이면, 자동화 스킬을 제안한다.
 - 사용자가 수락하면 Phase 0을 건너뛰고 Phase 1부터 시작한다.
   (connector가 이미 연결 상태를 확인했으므로)

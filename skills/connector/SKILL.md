@@ -38,15 +38,62 @@ triggers:
 
 ## 실행 흐름
 
-이 스킬이 트리거되면 아래 순서로 진행한다.
+이 스킬이 트리거되면 **가장 먼저 state.json을 확인**하여 분기한다.
 
 **링크 출력 규칙**: 모든 URL은 코드 블록 밖에서 마크다운 링크 형식 `[텍스트](URL)` 으로 표시한다. 코드 블록 안에 URL을 절대 넣지 않는다. 코드 블록 안의 URL은 클릭이 불가능하고 줄바꿈이 발생할 수 있다. 단, JSON 설정 예시의 URL 값은 설정값이므로 코드 블록 안에 표기한다.
+
+### 상태 확인 및 분기
+
+스킬이 시작되면 Read 도구로 `~/.claude/skills/smilegate-ai-tools/state.json` 파일을 읽는다.
+
+**하위 호환**: `connector` 키에 `status` 필드가 없고 `completed: true`만 있는 경우, `status: "completed"`로 취급한다.
+
+아래 3가지 케이스로 분기한다:
+
+**케이스 A: 파일 없음 또는 `connector` 키 없음 → 신규 설치**
+
+처음 방문한 사용자다. 아래 "진단" 단계부터 전체 흐름을 진행한다:
 
 ```
 진단 → 서비스 선택 → 서비스별 설정(하나씩) → 재시작(필요 시) → 연결 테스트 → 완료 리포트 → 자동화 제안(첫 실행 시)
 ```
 
+**케이스 B: `connector.status` = `"installing"` → 재시작 후 복귀**
+
+이전에 설정을 완료하고 재시작을 안내받은 사용자가 돌아왔다. `connector.pending_services` 목록을 확인하여 연결 테스트를 진행한다.
+
+1. pending_services에 있는 서비스들의 도구가 로드되었는지 ToolSearch로 확인한다.
+2. **도구가 로드됨** → 바로 "연결 테스트" 단계로 이동. pending_services에 있는 서비스만 테스트한다.
+3. **도구가 로드되지 않음** → 재시작이 아직 안 된 상태. 아래 메시지를 다시 출력한다:
+
+   아직 재시작이 완료되지 않았어요!
+
+   **1단계: Claude Code 종료**
+   - Mac / Linux: `Ctrl+D` 누르기
+   - Windows: `exit` 입력
+
+   **2단계: 다시 시작**
+   - 터미널에서 `claude` 입력
+
+   **3단계: 아래 명령어를 그대로 입력**
+
+   > /connector
+
+**케이스 C: `connector.status` = `"completed"` → 재방문**
+
+이미 설정을 완료한 사용자다. 아래 "진단" 단계부터 진행하되, 모두 ✅이면 바로 종료한다. ⚠️/❌가 있으면 추가 설정을 진행한다.
+
+```
+진단 → (모두 ✅이면 종료) → 서비스 선택 → 서비스별 설정 → 재시작(필요 시) → 연결 테스트 → 완료 리포트
+```
+
+> 재방문(케이스 C)에서는 자동화 스킬 제안을 건너뛴다.
+
+---
+
 ### 진단: 현재 연결 상태 확인
+
+> 케이스 B(installing)에서는 이 단계를 건너뛴다.
 
 스킬 시작 시 먼저 현재 연결 상태를 진단한다.
 
@@ -140,27 +187,67 @@ Jira와 Confluence를 모두 선택한 경우, 사용자 ID는 **한 번만** �
 입력받은 토큰 값의 앞뒤 공백과 줄바꿈을 제거(trim)한 뒤 설정 파일에 저장한다.
 대화에서는 마스킹하여 표시한다.
 
+### 비-MCP 서비스 즉시 테스트
+
+MCP 서비스와 비-MCP 서비스(Slack, GitLab)를 함께 선택한 경우, 비-MCP 서비스는 재시작이 필요 없으므로 **설정 직후 바로 테스트**한다. 이 테스트 결과는 state.json의 `connected_services`에 반영된다.
+
+> Slack, GitLab만 선택한 경우 (MCP 서비스 없음), 재시작이 필요 없으므로 설정 → 테스트 → 완료 리포트로 바로 이동한다. state.json에 installing 상태를 저장하지 않는다.
+
 ### 재시작
 
 MCP 서비스를 1개 이상 설정한 경우, **모든 서비스의 설정이 끝난 후** Claude Code를 한 번만 재시작한다.
 
-> MCP 서비스를 하나도 선택하지 않은 경우 (예: Slack + GitLab만), 재시작은 필요 없으므로 건너뛴다.
+#### state.json에 installing 상태 저장
 
-설정 파일의 mcpServers에 {설정한 서비스 목록} 설정이 모두 추가되었습니다!
+재시작 안내를 출력하기 **직전에**, `~/.claude/skills/smilegate-ai-tools/state.json` 파일을 생성/업데이트한다:
 
-이제 **Claude Code를 한 번 재시작**하면 모든 서비스가 동시에 연결됩니다:
+```json
+{
+  "connector": {
+    "status": "installing",
+    "pending_services": ["{MCP 재시작이 필요한 설정 서비스 목록}"],
+    "connected_services": ["{이미 연결 완료된 전체 서비스 목록}"],
+    "first_completed_at": "{기존 값 보존 또는 null}",
+    "last_updated_at": "{현재 ISO 8601 시각}"
+  }
+}
+```
 
-- **Mac / Linux**: `Ctrl+D` → 터미널에서 `claude` 실행
-- **Windows**: `exit` 입력 → 터미널에서 `claude` 실행
+- `pending_services`: 이번에 설정했지만 재시작이 필요한 MCP 서비스만 포함 (Jira, Confluence, BISKIT, API Docs, Amplitude 중 선택한 것)
+- `connected_services`: 기존 state.json에 connected_services가 있었다면 그 목록을 유지하고, 이번 세션에서 즉시 테스트 성공한 비-MCP 서비스(Slack, GitLab)를 추가한다.
+- `first_completed_at`: 기존 state.json에 이 값이 있었다면 **반드시 보존**한다. 없었다면 포함하지 않는다.
+- 파일이 이미 존재하면 기존 내용을 보존하고 `connector` 키만 업데이트한다.
 
-재시작 후 `/resume` 을 입력하면 **직전 대화를 이어서** 진행할 수 있습니다.
+#### 재시작 안내 메시지
+
+state.json 저장 후 아래 메시지를 출력한다:
+
+설정 파일에 {설정한 서비스 목록} 설정이 추가되었습니다!
+
+---
+
+⚠️ **아래 두 단계를 반드시 따라해주세요!**
+
+**1단계: Claude Code 재시작**
+- Mac / Linux: `Ctrl+D` 누르기 → 터미널에서 `claude` 입력
+- Windows: `exit` 입력 → 터미널에서 `claude` 입력
+
+**2단계: 아래 명령어를 그대로 복사해서 붙여넣기**
+
+> /connector
+
+이 명령어를 입력하면 자동으로 연결 테스트가 시작됩니다.
+
+---
 
 ### 연결 테스트
 
-사용자가 재시작을 완료했다고 (또는 `/resume`으로 돌아왔다고) 알려주면, 선택한 서비스를 **모두** 테스트한다.
-각 서비스의 연결 테스트 방법은 해당 가이드를 참조한다.
+이 단계에 진입하는 경로는 2가지다:
 
-재시작이 필요 없었던 경우 (Slack/GitLab만 선택), 설정 직후 바로 테스트한다.
+1. **케이스 B (installing → 재시작 후 /connector 재진입)**: state.json의 `pending_services`에 있는 서비스만 테스트한다.
+2. **일반 흐름 (재시작 불필요 또는 같은 세션 내)**: 선택한 서비스를 **모두** 테스트한다.
+
+각 서비스의 연결 테스트 방법은 해당 가이드를 참조한다.
 
 연결 실패 시 트러블슈팅 → [references/troubleshoot.md](references/troubleshoot.md)
 
@@ -196,26 +283,32 @@ MCP 서비스를 1개 이상 설정한 경우, **모든 서비스의 설정이 �
 
 ### 자동화 스킬 제안 (첫 실행 시만)
 
-완료 리포트를 출력한 후, 사용자의 첫 실행 여부를 확인한다.
+완료 리포트를 출력한 후, 첫 실행 여부를 확인한다.
 
 **확인 방법:**
-Read 도구로 `~/.claude/skills/smilegate-ai-tools/state.json` 파일을 읽는다.
-- 파일이 없거나, `connector.completed`가 `false`이면 → 첫 실행
-- `connector.completed`가 `true`이면 → 재실행
+state.json의 `connector.first_completed_at` 값으로 판단한다.
+- `first_completed_at`이 없다 → 첫 실행 (한 번도 completed된 적 없음)
+- `first_completed_at`이 있다 → 재실행 (이전에 이미 completed를 거침)
+- **하위 호환**: 레거시 형식(`completed: true`만 있고 `first_completed_at`이 없는 경우)은 **재실행**으로 취급한다. 이미 한 번 완료한 사용자이기 때문이다.
+
+> 이 기준을 사용하면, 케이스 C(completed) → 추가 서비스 설치 → 케이스 B(installing)로 돌아온 사용자에게 자동화를 다시 제안하지 않는다.
 
 **케이스 1: 첫 실행 + 연결 성공 서비스 1개 이상**
 
-1. `~/.claude/skills/smilegate-ai-tools/state.json` 파일을 생성/업데이트한다:
+1. state.json의 connector를 completed 상태로 업데이트한다:
    ```json
    {
      "connector": {
-       "completed": true,
+       "status": "completed",
+       "connected_services": ["{연결 성공한 전체 서비스 목록}"],
        "first_completed_at": "{현재 날짜}",
-       "connected_services": ["{연결된 서비스 목록}"]
+       "last_updated_at": "{현재 ISO 8601 시각}"
      }
    }
    ```
-   > 파일이 이미 존재하면 기존 내용을 보존하고 `connector` 키만 추가/업데이트한다.
+   - `pending_services`는 제거한다 (더 이상 대기 중인 서비스가 없으므로).
+   - `connected_services`에는 이번에 테스트 성공한 서비스 + 기존에 이미 연결되어 있던 서비스를 모두 포함한다.
+   - 파일이 이미 존재하면 기존 내용을 보존하고 `connector` 키만 업데이트한다.
 
 2. 출력 스타일 전환을 안내한다:
 
@@ -244,12 +337,12 @@ Read 도구로 `~/.claude/skills/smilegate-ai-tools/state.json` 파일을 읽는
 
 **케이스 2: 첫 실행 + 연결 성공 서비스 0개**
 
-플래그를 생성하지 않는다. 다음 성공적 실행 시 automation 제안을 받을 수 있도록 한다.
+state.json을 업데이트하지 않는다 (status를 installing이나 completed로 바꾸지 않음). 다음 성공적 실행 시 automation 제안을 받을 수 있도록 한다.
 완료 리포트만 출력하고 종료.
 
-**케이스 3: 재실행 (completed가 true)**
+**케이스 3: 재실행 (케이스 C에서 진입)**
 
-자동화 제안을 건너뛴다. 완료 리포트만 출력하고 종료한다.
+state.json의 `connected_services`를 현재 연결 성공한 서비스 목록으로 업데이트하고, 자동화 제안은 건너뛴다. 완료 리포트만 출력하고 종료한다.
 
 ## MCP 설정 위치
 
