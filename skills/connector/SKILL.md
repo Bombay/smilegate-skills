@@ -81,11 +81,20 @@ triggers:
 
 **케이스 C: `connector.status` = `"completed"` → 재방문**
 
-이미 설정을 완료한 사용자다. 아래 "진단" 단계부터 진행하되, 모두 ✅이면 바로 종료한다. ⚠️/❌가 있으면 추가 설정을 진행한다.
+이미 설정을 완료한 사용자다. 아래 "진단" 단계부터 진행하되, state.json의 `connected_services`가 **1개 이상 있고** 그 서비스들이 **모두 ✅이면** 빠른 종료 분기를 탄다.
 
 ```
-진단 → (모두 ✅이면 종료) → 서비스 선택 → 서비스별 설정 → 재시작(필요 시) → 연결 테스트 → 완료 리포트
+진단 → (connected_services 1개 이상 & 모두 ✅) → "기존 연결이 모두 정상입니다" + 추가 설정 여부 질문
+     → (connected_services 없음 또는 ⚠️/❌ 있음) → 서비스 선택 → 서비스별 설정 → 재시작(필요 시) → 연결 테스트 → 완료 리포트
 ```
+
+빠른 종료 조건 충족 시:
+1. "기존 연결(Slack, Jira …)이 모두 정상입니다!"를 출력한다. (실제 서비스명 나열)
+2. AskUserQuestion으로 "추가로 설정할 서비스가 있나요?"를 묻는다.
+   - "네" → ❌ 미연결 서비스만 서비스 선택으로 이동
+   - "아니요" → 종료
+
+> `connected_services`가 없거나 빈 배열인 경우(레거시 형식 등)는 빠른 종료를 건너뛰고 일반 진단 흐름으로 진행한다.
 
 > 재방문(케이스 C)에서는 자동화 스킬 제안을 건너뛴다.
 
@@ -124,7 +133,9 @@ triggers:
 - Slack, API Docs, Amplitude는 수동 토큰 관리가 불필요하므로 ✅(연결됨)과 ❌(미연결) 두 가지 상태만 존재한다.
 
 이미 연결된 서비스(✅)는 건너뛴다. ⚠️ 또는 ❌ 상태의 서비스만 설정을 진행한다.
-모두 ✅이면 "모든 서비스가 연결되어 있습니다!"를 출력하고 기본 사용법을 안내한 뒤 종료한다.
+전체 7개 서비스가 모두 ✅이면 "모든 서비스가 연결되어 있습니다!"를 출력하고 기본 사용법을 안내한 뒤 종료한다.
+
+> 케이스 C(재방문)에서는 위 조건 대신 `connected_services` 기준 빠른 종료를 먼저 확인한다. 케이스 C 설명 참조.
 
 ### 서비스 선택
 
@@ -134,7 +145,7 @@ triggers:
 
 이후 AskUserQuestion으로 설정할 서비스를 선택받는다:
 - question: "어떤 서비스를 설정할까요? (⬆⬇ 화살표로 이동, Space로 선택, Enter로 확인)"
-- options: ⚠️/❌ 상태의 서비스만 동적으로 표시
+- options: ⚠️/❌ 상태의 서비스만 동적으로 표시. 사용자가 아무것도 선택하지 않고 Enter만 누르거나 "Other"로 "건너뛰기"/"나중에" 등을 입력하면, "나중에 다시 `/connector`로 설정할 수 있어요!"를 안내하고 종료한다.
   - {label: "Slack", description: "Slack 채널 읽기/검색 (클릭 몇 번이면 끝)"}
   - {label: "Jira", description: "Jira 이슈 조회/생성/관리 (토큰 발급 필요)"}
   - {label: "Jira ⚠️ 재연결", description: "토큰 만료 또는 오류 — 토큰을 다시 발급받아 연결합니다"}
@@ -214,7 +225,7 @@ MCP 서비스를 1개 이상 설정한 경우, **모든 서비스의 설정이 �
 ```
 
 - `pending_services`: 이번에 설정했지만 재시작이 필요한 MCP 서비스만 포함 (Jira, Confluence, BISKIT, API Docs, Amplitude 중 선택한 것)
-- `connected_services`: 기존 state.json에 connected_services가 있었다면 그 목록을 유지하고, 이번 세션에서 즉시 테스트 성공한 비-MCP 서비스(Slack, GitLab)를 추가한다.
+- `connected_services`: 기존 state.json에 connected_services가 있었다면 그 목록을 유지하고, 이번 세션에서 즉시 테스트 성공한 비-MCP 서비스(Slack, GitLab)를 추가한다. **중복을 제거**한다.
 - `first_completed_at`: 기존 state.json에 이 값이 있었다면 **반드시 보존**한다. 없었다면 포함하지 않는다.
 - 파일이 이미 존재하면 기존 내용을 보존하고 `connector` 키만 업데이트한다.
 
@@ -307,7 +318,7 @@ state.json의 `connector.first_completed_at` 값으로 판단한다.
    }
    ```
    - `pending_services`는 제거한다 (더 이상 대기 중인 서비스가 없으므로).
-   - `connected_services`에는 이번에 테스트 성공한 서비스 + 기존에 이미 연결되어 있던 서비스를 모두 포함한다.
+   - `connected_services`에는 이번에 테스트 성공한 서비스 + 기존에 이미 연결되어 있던 서비스를 모두 포함하고 **중복을 제거**한다.
    - 파일이 이미 존재하면 기존 내용을 보존하고 `connector` 키만 업데이트한다.
 
 2. 출력 스타일 전환을 안내한다:
@@ -337,12 +348,33 @@ state.json의 `connector.first_completed_at` 값으로 판단한다.
 
 **케이스 2: 첫 실행 + 연결 성공 서비스 0개**
 
-state.json을 업데이트하지 않는다 (status를 installing이나 completed로 바꾸지 않음). 다음 성공적 실행 시 automation 제안을 받을 수 있도록 한다.
-완료 리포트만 출력하고 종료.
+state.json에서 `connector` 키를 **제거**한다. 이렇게 하면 다음 `/connector` 실행 시 케이스 A(신규)로 돌아가서 처음부터 진행할 수 있다. `connector` 키를 제거하지 않으면, `installing` 상태가 유지되어 케이스 B가 반복되는 무한 루프가 발생한다.
+
+완료 리포트와 트러블슈팅 안내를 출력하고 종료한다.
 
 **케이스 3: 재실행 (케이스 C에서 진입)**
 
-state.json의 `connected_services`를 현재 연결 성공한 서비스 목록으로 업데이트하고, 자동화 제안은 건너뛴다. 완료 리포트만 출력하고 종료한다.
+state.json을 업데이트하고, 자동화 제안은 건너뛴다. 완료 리포트만 출력하고 종료한다.
+
+**케이스 3-a: 연결 성공 서비스 1개 이상**
+
+state.json의 connector를 아래와 같이 업데이트한다:
+```json
+{
+  "connector": {
+    "status": "completed",
+    "connected_services": ["{연결 성공한 전체 서비스 목록 (중복 제거)}"],
+    "first_completed_at": "{기존 값 반드시 보존}",
+    "last_updated_at": "{현재 ISO 8601 시각}"
+  }
+}
+```
+- `connected_services`: 이번에 테스트 성공한 서비스 + 기존에 이미 연결되어 있던 서비스를 합친 뒤 **중복을 제거**한다.
+- `first_completed_at`: 기존 state.json의 값을 **반드시 보존**한다. 이 값이 변경되면 첫 실행/재실행 판단이 깨진다.
+
+**케이스 3-b: 연결 성공 서비스 0개 (전체 실패)**
+
+state.json을 업데이트하되, `connected_services`는 기존 값을 유지한다 (이번 테스트에서 실패했더라도 이전에 연결했던 서비스 목록은 보존). `status`는 `"completed"`를 유지한다. 트러블슈팅을 안내하고 종료한다.
 
 ## MCP 설정 위치
 
