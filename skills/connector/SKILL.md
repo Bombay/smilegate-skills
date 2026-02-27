@@ -237,13 +237,16 @@ state.json 저장 후 아래 메시지를 출력한다:
 
 ---
 
-⚠️ **아래 두 단계를 반드시 따라해주세요!**
+⚠️ **아래 세 단계를 반드시 따라해주세요!**
 
-**1단계: Claude Code 재시작**
-- Mac / Linux: `Ctrl+D` 누르기 → 터미널에서 `claude` 입력
-- Windows: `exit` 입력 → 터미널에서 `claude` 입력
+**1단계: Claude Code 종료**
+- Mac / Linux: `Ctrl+D` 누르기
+- Windows: `exit` 입력
 
-**2단계: 아래 명령어를 그대로 복사해서 붙여넣기**
+**2단계: Claude Code 다시 시작**
+- 터미널에서 `claude` 입력
+
+**3단계: 아래 명령어를 그대로 입력**
 
 > /connector
 
